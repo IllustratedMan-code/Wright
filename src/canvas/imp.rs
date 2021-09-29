@@ -13,7 +13,7 @@ pub struct point {
 pub struct Canvas {
     pub x: Cell<f64>,
     pub y: Cell<f64>,
-    pub lines: RefCell<Vec<point>>,
+    pub lines: RefCell<Vec<RefCell<Vec<point>>>>,
     pub is_drawing: Cell<bool>,
 }
 
@@ -40,9 +40,11 @@ impl PaintableImpl for Canvas {
             Some(c) => {
                 c.set_source_rgb(0.3, 0.3, 0.3);
                 c.arc(self.x.get(), self.y.get(), 30.0, 0.0, 3.14 * 2.);
-                for point in self.lines.borrow().iter() {
-                    c.set_line_width(point.size);
-                    c.line_to(point.x, point.y);
+                for line in self.lines.borrow().iter() {
+                    for point in line.borrow().iter() {
+                        c.set_line_width(point.size);
+                        c.line_to(point.x, point.y);
+                    }
                 }
                 c.stroke().expect("Invalid cairo surface state");
             }
