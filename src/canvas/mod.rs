@@ -29,8 +29,16 @@ impl Canvas {
             match l.last() {
                 Some(p) => {
                     p.borrow_mut().push(imp::point {
-                        x: x - canvas.offset_x.get(),
-                        y: y - canvas.offset_y.get(),
+                        x: self.inverse_zoom(
+                            canvas.zoom_x.get(),
+                            canvas.x.get(),
+                            canvas.offset_x.get(),
+                        ),
+                        y: self.inverse_zoom(
+                            canvas.zoom_y.get(),
+                            canvas.y.get(),
+                            canvas.offset_y.get(),
+                        ),
                         size: 3.0,
                     });
                 }
@@ -60,14 +68,21 @@ impl Canvas {
     }
 
     // zoom functions
-    fn zoom(&self, x: f64, y: f64) -> (f64, f64) {
+    pub fn zoom(&self, delta: f64) {
         let canvas = imp::Canvas::from_instance(self);
-
-        return (x, y);
+        canvas.zoom.set(canvas.zoom.get() + delta);
+        canvas.zoom_x.set(imp::Canvasimpl::zoom(
+            canvas,
+            canvas.zoom_x.get(),
+            canvas.x.get(),
+            canvas.offset_x.get(),
+        ));
+        canvas.zoom_y.set(canvas.y.get());
+        self.invalidate_contents();
     }
-    pub fn zoom_in(&self) {
+    fn inverse_zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64 {
         let canvas = imp::Canvas::from_instance(self);
-        canvas.zoom.set(canvas.zoom.get() + 1.0)
+        return ((x - offset - origin_x) / canvas.zoom.get()) + origin_x;
     }
 
     //offset manager functions (how points are translated on the canvas)
@@ -86,8 +101,8 @@ impl Canvas {
         canvas.is_drawing.set(true);
         let mut l = canvas.lines.borrow_mut();
         let r = RefCell::new(vec![imp::point {
-            x: x - canvas.offset_x.get(),
-            y: y - canvas.offset_y.get(),
+            x: self.inverse_zoom(canvas.zoom_x.get(), canvas.x.get(), canvas.offset_x.get()),
+            y: self.inverse_zoom(canvas.zoom_y.get(), canvas.y.get(), canvas.offset_y.get()),
             size: 3.0,
         }]);
         l.push(r);
