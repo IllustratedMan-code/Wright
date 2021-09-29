@@ -19,6 +19,7 @@ impl Canvas {
     pub fn new() -> Self {
         glib::Object::new(&[]).expect("Failed to create a Canvas")
     }
+    // Changes cursor location
     pub fn change(&self, x: f64, y: f64) {
         let _self = imp::Canvas::from_instance(self);
         if _self.is_drawing.get() {

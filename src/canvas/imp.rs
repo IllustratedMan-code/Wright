@@ -9,11 +9,19 @@ pub struct point {
     pub size: f64,
 }
 
+impl PartialEq for point {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.size == other.size
+    }
+}
+
 #[derive(Default)]
 pub struct Canvas {
     pub x: Cell<f64>,
     pub y: Cell<f64>,
     pub lines: RefCell<Vec<RefCell<Vec<point>>>>,
+    pub line_offset_x: Cell<f64>,
+    pub line_offset_y: Cell<f64>,
     pub is_drawing: Cell<bool>,
 }
 
@@ -38,14 +46,29 @@ impl PaintableImpl for Canvas {
         ));
         match context {
             Some(c) => {
+                // cursor
                 c.set_source_rgb(0.3, 0.3, 0.3);
                 c.arc(self.x.get(), self.y.get(), 30.0, 0.0, 3.14 * 2.);
+
+                // lines
                 for line in self.lines.borrow().iter() {
-                    for point in line.borrow().iter() {
-                        c.set_line_width(point.size);
-                        c.line_to(point.x, point.y);
+                    let points = line.borrow();
+                    for point in points.iter() {
+                        match points.first() {
+                            Some(p) => {
+                                if point == p {
+                                    c.move_to(point.x, point.y)
+                                } else {
+                                    c.line_to(point.x, point.y);
+                                    c.set_line_width(point.size);
+                                }
+                            }
+                            None => (),
+                        }
                     }
                 }
+
+                // stroke test
                 c.stroke().expect("Invalid cairo surface state");
             }
             None => eprintln!("Context not created"),
