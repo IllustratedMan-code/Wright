@@ -20,7 +20,15 @@ impl Canvas {
     }
     pub fn change(&self, x: f64, y: f64) {
         let _self = imp::Canvas::from_instance(self);
-        if _self.is_drawing.get() {}
+        if _self.is_drawing.get() {
+            let mut l = _self.lines.borrow_mut();
+            l.push(imp::point {
+                x: x,
+                y: y,
+                size: 3.0,
+            });
+            println!("len: {}", l.len())
+        }
         _self.x.set(x);
         _self.y.set(y);
         self.invalidate_contents();
