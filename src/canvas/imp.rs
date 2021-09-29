@@ -20,9 +20,11 @@ pub struct Canvas {
     pub x: Cell<f64>,
     pub y: Cell<f64>,
     pub lines: RefCell<Vec<RefCell<Vec<point>>>>,
-    pub line_offset_x: Cell<f64>,
-    pub line_offset_y: Cell<f64>,
+    pub offset_x: Cell<f64>,
+    pub offset_y: Cell<f64>,
     pub is_drawing: Cell<bool>,
+    pub is_offsetting: Cell<bool>,
+    pub zoom: Cell<f64>,
 }
 
 #[glib::object_subclass]
@@ -57,9 +59,15 @@ impl PaintableImpl for Canvas {
                         match points.first() {
                             Some(p) => {
                                 if point == p {
-                                    c.move_to(point.x, point.y)
+                                    c.move_to(
+                                        point.x + self.offset_x.get(),
+                                        point.y + self.offset_y.get(),
+                                    )
                                 } else {
-                                    c.line_to(point.x, point.y);
+                                    c.line_to(
+                                        point.x + self.offset_x.get(),
+                                        point.y + self.offset_y.get(),
+                                    );
                                     c.set_line_width(point.size);
                                 }
                             }

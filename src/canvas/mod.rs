@@ -21,14 +21,16 @@ impl Canvas {
     }
     // Changes cursor location
     pub fn change(&self, x: f64, y: f64) {
-        let _self = imp::Canvas::from_instance(self);
-        if _self.is_drawing.get() {
-            let mut l = _self.lines.borrow_mut();
+        let canvas = imp::Canvas::from_instance(self);
+
+        // creates lines if is_drawing is true
+        if canvas.is_drawing.get() {
+            let mut l = canvas.lines.borrow_mut();
             match l.last() {
                 Some(p) => {
                     p.borrow_mut().push(imp::point {
-                        x: x,
-                        y: y,
+                        x: x - canvas.offset_x.get(),
+                        y: y - canvas.offset_y.get(),
                         size: 3.0,
                     });
                 }
@@ -36,27 +38,66 @@ impl Canvas {
             }
             println!("len: {}", l.len())
         }
-        _self.x.set(x);
-        _self.y.set(y);
+
+        // offsets lines if is_offsetting is true
+        if canvas.is_offsetting.get() {
+            canvas
+                .offset_x
+                .set(x - (canvas.x.get() - canvas.offset_x.get()));
+            canvas
+                .offset_y
+                .set(y - (canvas.y.get() - canvas.offset_y.get()));
+            println!(
+                "Offset:{}, {}",
+                canvas.offset_y.get(),
+                canvas.offset_x.get()
+            )
+        }
+
+        canvas.x.set(x);
+        canvas.y.set(y);
         self.invalidate_contents();
     }
+
+    // zoom functions
+    fn zoom(&self, x: f64, y: f64) -> (f64, f64) {
+        let canvas = imp::Canvas::from_instance(self);
+
+        return (x, y);
+    }
+    pub fn zoom_in(&self) {
+        let canvas = imp::Canvas::from_instance(self);
+        canvas.zoom.set(canvas.zoom.get() + 1.0)
+    }
+
+    //offset manager functions (how points are translated on the canvas)
+    pub fn start_offset(&self) {
+        let canvas = imp::Canvas::from_instance(self);
+        canvas.is_offsetting.set(true);
+    }
+    pub fn end_offset(&self) {
+        let canvas = imp::Canvas::from_instance(self);
+        canvas.is_offsetting.set(false);
+    }
+
+    // line manager functions
     pub fn start_line(&self, x: f64, y: f64) {
-        let _self = imp::Canvas::from_instance(self);
-        _self.is_drawing.set(true);
-        let mut l = _self.lines.borrow_mut();
+        let canvas = imp::Canvas::from_instance(self);
+        canvas.is_drawing.set(true);
+        let mut l = canvas.lines.borrow_mut();
         let r = RefCell::new(vec![imp::point {
-            x: x,
-            y: y,
+            x: x - canvas.offset_x.get(),
+            y: y - canvas.offset_y.get(),
             size: 3.0,
         }]);
         l.push(r);
-        println!("is: {}", _self.is_drawing.get());
+        println!("is: {}", canvas.is_drawing.get());
         self.invalidate_contents();
     }
     pub fn end_line(&self, x: f64, y: f64) {
-        let _self = imp::Canvas::from_instance(self);
-        _self.is_drawing.set(false);
-        println!("is: {}", _self.is_drawing.get());
+        let canvas = imp::Canvas::from_instance(self);
+        canvas.is_drawing.set(false);
+        println!("is: {}", canvas.is_drawing.get());
         self.invalidate_contents();
     }
 }
