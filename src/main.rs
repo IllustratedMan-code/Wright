@@ -43,7 +43,6 @@ fn build_ui(application: &gtk4::Application) {
         .connect_pressed(glib::clone!(@weak canvas  => move |_, n, x, y| canvas.start_offset()));
     gesture2.connect_released(glib::clone!(@weak canvas  => move |_, n, x, y| canvas.end_offset()));
     gesture3.connect_scroll(move |_, x, y| {
-        println!("delta: {}", y);
         canvas.zoom(y / 10.0);
         Inhibit(false)
     });

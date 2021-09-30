@@ -2,11 +2,20 @@ use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
 use gtk4::{gdk, glib, graphene, gsk};
 use std::cell::{Cell, RefCell};
-#[derive(Default, Copy, Clone)]
+#[derive(Default)]
 pub struct point {
     pub x: f64,
     pub y: f64,
+    pub zoom_x: f64,
+    pub zoom_y: f64,
     pub size: f64,
+}
+
+impl Copy for point {}
+impl Clone for point {
+    fn clone(&self) -> point {
+        *self
+    }
 }
 
 impl PartialEq for point {
@@ -59,24 +68,25 @@ impl PaintableImpl for Canvas {
                 // cursor
                 c.set_source_rgb(0.3, 0.3, 0.3);
                 c.arc(self.x.get(), self.y.get(), 30.0, 0.0, 3.14 * 2.);
+                c.stroke().expect("Invalid cairo surface state");
 
                 // lines
                 for line in self.lines.borrow().iter() {
                     let points = line.borrow();
                     for point in points.iter() {
+                        c.set_line_width(point.size);
                         match points.first() {
                             Some(p) => {
                                 if point == p {
                                     c.move_to(
-                                        self.zoom(self.zoom_x.get(), point.x, self.offset_x.get()),
-                                        self.zoom(self.zoom_y.get(), point.y, self.offset_y.get()),
+                                        point.zoom_x + self.offset_x.get(),
+                                        point.zoom_y + self.offset_y.get(),
                                     )
                                 } else {
                                     c.line_to(
-                                        self.zoom(self.zoom_x.get(), point.x, self.offset_x.get()),
-                                        self.zoom(self.zoom_y.get(), point.y, self.offset_y.get()),
+                                        point.zoom_x + self.offset_x.get(),
+                                        point.zoom_y + self.offset_y.get(),
                                     );
-                                    c.set_line_width(point.size);
                                 }
                             }
                             None => (),
@@ -94,7 +104,7 @@ impl PaintableImpl for Canvas {
 
 pub trait Canvasimpl {
     fn change(&self, x: f64, y: f64);
-    fn zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64;
+    fn zoom(&self, origin_x: f64, x: f64) -> f64;
 }
 
 impl Canvasimpl for Canvas {
@@ -102,7 +112,7 @@ impl Canvasimpl for Canvas {
         self.x.set(x);
         self.y.set(y);
     }
-    fn zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64 {
-        return (x - origin_x) * self.zoom.get() + origin_x + offset;
+    fn zoom(&self, origin_x: f64, x: f64) -> f64 {
+        return (x - origin_x) * self.zoom.get() + origin_x;
     }
 }

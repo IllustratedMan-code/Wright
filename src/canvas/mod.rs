@@ -29,22 +29,15 @@ impl Canvas {
             match l.last() {
                 Some(p) => {
                     p.borrow_mut().push(imp::point {
-                        x: self.inverse_zoom(
-                            canvas.zoom_x.get(),
-                            canvas.x.get(),
-                            canvas.offset_x.get(),
-                        ),
-                        y: self.inverse_zoom(
-                            canvas.zoom_y.get(),
-                            canvas.y.get(),
-                            canvas.offset_y.get(),
-                        ),
+                        x: canvas.x.get() - canvas.offset_x.get(),
+                        y: canvas.y.get() - canvas.offset_y.get(),
+                        zoom_x: x,
+                        zoom_y: y,
                         size: 3.0,
                     });
                 }
                 None => (),
             }
-            println!("len: {}", l.len())
         }
 
         // offsets lines if is_offsetting is true
@@ -55,11 +48,6 @@ impl Canvas {
             canvas
                 .offset_y
                 .set(y - (canvas.y.get() - canvas.offset_y.get()));
-            println!(
-                "Offset:{}, {}",
-                canvas.offset_y.get(),
-                canvas.offset_x.get()
-            )
         }
 
         canvas.x.set(x);
@@ -70,19 +58,41 @@ impl Canvas {
     // zoom functions
     pub fn zoom(&self, delta: f64) {
         let canvas = imp::Canvas::from_instance(self);
-        canvas.zoom.set(canvas.zoom.get() + delta);
         canvas.zoom_x.set(imp::Canvasimpl::zoom(
             canvas,
             canvas.zoom_x.get(),
             canvas.x.get(),
-            canvas.offset_x.get(),
         ));
-        canvas.zoom_y.set(canvas.y.get());
+        canvas.zoom_y.set(imp::Canvasimpl::zoom(
+            canvas,
+            canvas.zoom_y.get(),
+            canvas.y.get(),
+        ));
+        canvas.zoom.set(delta);
+        for line in canvas.lines.borrow_mut().iter() {
+            let mut l = line.borrow_mut();
+            for point in 0..l.len() {
+                l[point] = imp::point {
+                    x: l[point].x,
+                    y: l[point].y,
+                    zoom_x: imp::Canvasimpl::zoom(canvas, l[point].zoom_x, canvas.x.get()),
+                    zoom_y: imp::Canvasimpl::zoom(canvas, l[point].zoom_y, canvas.y.get()),
+                    size: l[point].size,
+                }
+            }
+        }
+
+        println!(
+            "zoom_x:{}, zoom_y:{}",
+            canvas.zoom_x.get(),
+            canvas.zoom_y.get()
+        );
+        println!("x:{}, y:{}", canvas.x.get(), canvas.y.get());
         self.invalidate_contents();
     }
     fn inverse_zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64 {
         let canvas = imp::Canvas::from_instance(self);
-        return ((x - offset - origin_x) / canvas.zoom.get()) + origin_x;
+        return ((x - origin_x) / canvas.zoom.get()) + origin_x;
     }
 
     //offset manager functions (how points are translated on the canvas)
@@ -103,16 +113,16 @@ impl Canvas {
         let r = RefCell::new(vec![imp::point {
             x: self.inverse_zoom(canvas.zoom_x.get(), canvas.x.get(), canvas.offset_x.get()),
             y: self.inverse_zoom(canvas.zoom_y.get(), canvas.y.get(), canvas.offset_y.get()),
+            zoom_x: x,
+            zoom_y: y,
             size: 3.0,
         }]);
         l.push(r);
-        println!("is: {}", canvas.is_drawing.get());
         self.invalidate_contents();
     }
     pub fn end_line(&self, x: f64, y: f64) {
         let canvas = imp::Canvas::from_instance(self);
         canvas.is_drawing.set(false);
-        println!("is: {}", canvas.is_drawing.get());
         self.invalidate_contents();
     }
 }
