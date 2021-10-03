@@ -31,8 +31,8 @@ impl Canvas {
                     p.borrow_mut().push(imp::point {
                         x: canvas.x.get() - canvas.offset_x.get(),
                         y: canvas.y.get() - canvas.offset_y.get(),
-                        zoom_x: x,
-                        zoom_y: y,
+                        zoom_x: canvas.x.get() - canvas.offset_x.get(),
+                        zoom_y: canvas.y.get() - canvas.offset_y.get(),
                         size: 3.0,
                     });
                 }
@@ -75,19 +75,21 @@ impl Canvas {
                 l[point] = imp::point {
                     x: l[point].x,
                     y: l[point].y,
-                    zoom_x: imp::Canvasimpl::zoom(canvas, l[point].zoom_x, canvas.x.get()),
-                    zoom_y: imp::Canvasimpl::zoom(canvas, l[point].zoom_y, canvas.y.get()),
-                    size: l[point].size,
+                    zoom_x: imp::Canvasimpl::zoom(
+                        canvas,
+                        l[point].zoom_x,
+                        canvas.x.get() - canvas.offset_x.get(),
+                    ),
+                    zoom_y: imp::Canvasimpl::zoom(
+                        canvas,
+                        l[point].zoom_y,
+                        canvas.y.get() - canvas.offset_y.get(),
+                    ),
+                    size: l[point].size * (1.0 - delta),
                 }
             }
         }
 
-        println!(
-            "zoom_x:{}, zoom_y:{}",
-            canvas.zoom_x.get(),
-            canvas.zoom_y.get()
-        );
-        println!("x:{}, y:{}", canvas.x.get(), canvas.y.get());
         self.invalidate_contents();
     }
     fn inverse_zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64 {
@@ -111,10 +113,10 @@ impl Canvas {
         canvas.is_drawing.set(true);
         let mut l = canvas.lines.borrow_mut();
         let r = RefCell::new(vec![imp::point {
-            x: self.inverse_zoom(canvas.zoom_x.get(), canvas.x.get(), canvas.offset_x.get()),
-            y: self.inverse_zoom(canvas.zoom_y.get(), canvas.y.get(), canvas.offset_y.get()),
-            zoom_x: x,
-            zoom_y: y,
+            x: canvas.x.get() - canvas.offset_x.get(),
+            y: canvas.y.get() - canvas.offset_y.get(),
+            zoom_x: canvas.x.get() - canvas.offset_x.get(),
+            zoom_y: canvas.y.get() - canvas.offset_y.get(),
             size: 3.0,
         }]);
         l.push(r);
