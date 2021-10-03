@@ -3,7 +3,7 @@ mod imp;
 use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
 use gtk4::{gdk, glib};
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 glib::wrapper! {
     pub struct Canvas(ObjectSubclass<imp::Canvas>) @implements gdk::Paintable;
@@ -25,7 +25,7 @@ impl Canvas {
 
         // creates lines if is_drawing is true
         if canvas.is_drawing.get() {
-            let mut l = canvas.lines.borrow_mut();
+            let l = canvas.lines.borrow_mut();
             match l.last() {
                 Some(p) => {
                     p.borrow_mut().push(imp::point {
