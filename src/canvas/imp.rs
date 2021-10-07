@@ -74,12 +74,10 @@ impl PaintableImpl for Canvas {
                 c.set_source_rgb(0.3, 0.3, 0.3);
                 for line in self.lines.borrow().iter() {
                     c.set_source_rgb(0.3, 0.3, 0.3);
-                    self.draw_curve(&c, &line.borrow(), 0.33);
-                    c.stroke().expect("Invalid cairo surface state");
+                    self.draw_curve(&c, &line.borrow(), 0.333);
                 }
 
                 // stroke test
-                c.stroke().expect("Invalid cairo surface state");
             }
             None => eprintln!("Context not created"),
         }
@@ -125,14 +123,16 @@ impl Canvasimpl for Canvas {
             let pre_x4 = interpolate_x(line[p(point + 1)].zoom_x, line[p(point + 2)].zoom_x, ratio);
             let x2 = pre_x2 + self.offset_x.get();
             let x3 = pre_x3 + self.offset_x.get();
-            let x4 = interpolate_x(pre_x4, pre_x3, 0.5) + self.offset_x.get();
+            let x4 = interpolate_x(pre_x4, pre_x3, 0.7) + self.offset_x.get();
             let pre_y2 = interpolate_y(line[p(point)].zoom_y, line[p(point + 1)].zoom_y, ratio);
             let pre_y3 = interpolate_y(line[p(point + 1)].zoom_y, line[p(point)].zoom_y, ratio);
             let pre_y4 = interpolate_y(line[p(point + 1)].zoom_y, line[p(point + 2)].zoom_y, ratio);
             let y2 = pre_y2 + self.offset_y.get();
             let y3 = pre_y3 + self.offset_y.get();
-            let y4 = interpolate_y(pre_y4, pre_y3, 0.5) + self.offset_y.get();
+            let y4 = interpolate_y(pre_y4, pre_y3, 0.7) + self.offset_y.get();
             c.curve_to(x2, y2, x3, y3, x4, y4);
         }
+
+        c.stroke().expect("Invalid cairo surface state");
     }
 }

@@ -20,7 +20,7 @@ impl Canvas {
         glib::Object::new(&[]).expect("Failed to create a Canvas")
     }
     // Changes cursor location
-    pub fn change(&self, x: f64, y: f64) {
+    pub async fn change(&self, x: f64, y: f64) {
         let canvas = imp::Canvas::from_instance(self);
 
         // creates lines if is_drawing is true
@@ -56,7 +56,7 @@ impl Canvas {
     }
 
     // zoom functions
-    pub fn zoom(&self, delta: f64) {
+    pub async fn zoom(&self, delta: f64) {
         let canvas = imp::Canvas::from_instance(self);
         canvas.zoom_x.set(imp::Canvasimpl::zoom(
             canvas,
