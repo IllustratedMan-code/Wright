@@ -92,15 +92,15 @@ impl Canvas {
 
         self.invalidate_contents();
     }
-    fn inverse_zoom(&self, origin_x: f64, x: f64, offset: f64) -> f64 {
-        let canvas = imp::Canvas::from_instance(self);
-        return ((x - origin_x) / canvas.zoom.get()) + origin_x;
-    }
-
     //offset manager functions (how points are translated on the canvas)
     pub fn start_offset(&self) {
         let canvas = imp::Canvas::from_instance(self);
-        canvas.is_offsetting.set(true);
+
+        if !canvas.is_offsetting.get() {
+            canvas.is_offsetting.set(true);
+        } else {
+            canvas.is_offsetting.set(false);
+        }
     }
     pub fn end_offset(&self) {
         let canvas = imp::Canvas::from_instance(self);

@@ -1,4 +1,6 @@
 mod canvas;
+mod note;
+use note::Note;
 
 use canvas::Canvas;
 use glib::MainContext;
@@ -32,26 +34,10 @@ fn build_ui(application: &gtk4::Application) {
     picture.add_controller(&mouse);
     let now = std::cell::Cell::new(SystemTime::now());
     stylus.connect_motion(glib::clone!(@weak canvas => move |event_controller, x, y| {
-        // The main loop executes the asynchronous block
-        let history = event_controller.backlog();
         let main_context = MainContext::default();
-        match history{
-        Some(e) => {main_context.spawn_local(glib::clone!(@weak canvas => async move {
-            for i in e{
-            canvas.change(i.axes()[1], i.axes()[2]).await;
-            }
+        main_context.spawn_local(glib::clone!(@weak canvas => async move {
             canvas.change(x, y).await;
-        }))},
-            None => (println!{"none"})
-        }
-        match now.get().elapsed() {
-            Ok(elapsed) => {
-                //println!("{}", elapsed.as_millis())
-            }
-            Err(e) => {}
-        }
-        now.set(SystemTime::now());
-    }));
+    }))}));
     stylus.connect_down(glib::clone!(@weak canvas  => move |_, x, y| canvas.start_line(x , y)));
     stylus.connect_up(glib::clone!(@weak canvas  => move |_,  x, y| canvas.end_line(x , y)));
     mouse.connect_motion(glib::clone!(@weak canvas => move |event_controller, x, y| {
@@ -93,7 +79,23 @@ fn build_ui(application: &gtk4::Application) {
         }));
         Inhibit(false)
     });
-
-    window.set_child(Some(&picture));
+    let box_frame = gtk4::Frame::new(Some("Box"));
+    let b = gtk4::Button::new();
+    let n = gtk4::Button::new();
+    let new_box = gtk4::Box::builder()
+        .orientation(gtk4::Orientation::Vertical)
+        .margin_bottom(0)
+        .opacity(1.0)
+        .build();
+    new_box.set_homogeneous(false);
+    box_frame.set_child(Some(&new_box));
+    let note = Note::new();
+    window.set_child(Some(&note));
+    picture.set_valign(gtk4::Align::Fill);
+    new_box.append(&picture);
+    println!("{}", picture.valign());
+    picture.set_vexpand(true);
+    new_box.append(&b);
+    picture.set_cursor_from_name(Some("crosshair"));
     window.show();
 }
