@@ -15,6 +15,6 @@ impl Default for Bar {
 
 impl Bar {
     pub fn new() -> Self {
-        glib::Object::new(&[]).expect("Failed to create Button")
+        glib::Object::new(&[]).expect("Failed to create Bar")
     }
 }

@@ -7,19 +7,8 @@ use std::cell::RefCell;
 
 #[derive(Debug, Default)]
 pub struct Note {
-    /// Reference to the canvas widget.
-    ///
-    /// In our case it's a text label for the button. Since this example only uses a
-    /// `gtk4::Label`, the type could've been `Option<gtk::Label>`. However, a real button might
-    /// switch between a label widget and an icon widget, and in general your widget can contain
-    /// arbitrary canvasren. Thus we used `Option<gtk4::Widget>` to show how to handle any widget
-    /// and to make the example easier to tweak and play with.
-    ///
-    /// Widgets automatically store strong references to their canvasren, added in `set_parent()`
-    /// and removed in `unparent()`. Therefore, this field could be a `WeakRef<gtk4::Widget>`.
-    /// Using a strong reference is just a little clearer.
     canvas: RefCell<Option<gtk4::Picture>>,
-    button: RefCell<Option<gtk4::Button>>,
+    button: RefCell<Option<Bar>>,
 }
 
 #[glib::object_subclass]
@@ -74,7 +63,6 @@ impl ObjectImpl for Note {
             match event {
                 Some(e) => {
                     history = e.history();
-                    println!("{}", history.len());
                     for i in history {
                         println!("asdf{}", i)
                     }
@@ -98,13 +86,13 @@ impl ObjectImpl for Note {
         note_canvas.set_hexpand(true);
         note_canvas.set_cursor_from_name(Some("crosshair"));
 
-        let button = gtk4::Button::new();
+        let bar = Bar::new();
 
-        button.set_parent(obj);
+        bar.set_parent(obj);
         note_canvas.set_parent(obj);
 
         *self.canvas.borrow_mut() = Some(note_canvas);
-        *self.button.borrow_mut() = Some(button);
+        *self.button.borrow_mut() = Some(bar);
 
         obj.add_css_class("note");
     }

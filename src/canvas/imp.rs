@@ -101,9 +101,9 @@ impl Canvasimpl for Canvas {
         let x1 = line[0].zoom_x + self.offset_x.get();
         let y1 = line[0].zoom_y + self.offset_y.get();
         c.move_to(x1, y1);
-        for point in 1..line.len() + 5 {
+        for point in 1..line.len() {
             let p = |point: i64| -> usize {
-                if point < 4 {
+                if point < 1 {
                     return 0;
                 } else if point > line.len() as i64 - 1 {
                     return line.len() - 1;
